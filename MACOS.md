@@ -11,7 +11,7 @@ Requirements:
 - Xcode Command Line Tools (`xcode-select --install`)
 
 ```bash
-cd /Users/dimitrislolis/Projects/Edge-Drop
+cd /path/to/Edge-Drop
 npm install
 npm run dev:mac
 ```
