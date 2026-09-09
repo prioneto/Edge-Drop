@@ -176,6 +176,8 @@ win.addEventListener('drop', (e: any) => {
 }, true)
 
 const api = {
+  platform: process.platform,
+
   /* Renderer -> Main */
   loadState: () => invoke('state:load'),
   setPinned: (id: string, pinned: boolean) => invoke('item:set-pinned', id, pinned),

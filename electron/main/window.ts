@@ -554,6 +554,14 @@ export function createWindow(): BrowserWindow {
   // Start click-through with no forwarding — edge detection is done via cursor poll.
   mainWindow.setIgnoreMouseEvents(true, { forward: false })
 
+  if (process.platform === 'darwin') {
+    mainWindow.setVisibleOnAllWorkspaces(true, {
+      visibleOnFullScreen: true,
+      skipTransformProcessType: true
+    })
+    mainWindow.setHiddenInMissionControl(true)
+  }
+
   // Apply WS_EX_NOACTIVATE so clicking the panel never steals OS focus from the active application.
   applyNoActivateStyle(mainWindow, true)
 
