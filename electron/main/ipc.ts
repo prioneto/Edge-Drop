@@ -26,6 +26,7 @@ import { applyLaunchAtLogin, refreshLaunchAtLoginFromOs } from './loginItems'
 import { toUnpackagedFilePath, toUnpackagedFilePaths } from '../store/paths'
 import { isPasteableEmoji } from '../../shared/emoji'
 import { simulateMacPaste, writeMacClipboardFiles, writeMacClipboardImage } from './macos'
+import { filePathsFromUriList } from '../../shared/dropPayload'
 
 export { isStoreBuild }
 
@@ -564,14 +565,11 @@ export function registerIpc(): void {
     if (data.kind === 'image' && (data as any).imageUrl) {
       const imageUrl = (data as any).imageUrl as string
       if (/^file:/i.test(imageUrl)) {
-        const local = imageUrl.replace(/^file:\/\//i, '').replace(/^\/([a-zA-Z]:)/, '$1')
-        try {
-          const decoded = decodeURIComponent(local).replace(/\//g, '\\')
-          if (existsSync(decoded)) {
-            addFiles([decoded])
-            return getStore().toDto()
-          }
-        } catch { /* fall through to bitmap import */ }
+        const localPaths = filterValidPaths(filePathsFromUriList(imageUrl, process.platform))
+        if (localPaths.length > 0) {
+          addFiles(localPaths)
+          return getStore().toDto()
+        }
       }
       try {
         let img = nativeImage.createFromDataURL(imageUrl)

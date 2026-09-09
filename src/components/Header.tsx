@@ -180,9 +180,6 @@ export function Header() {
             }}
             style={{
               color: 'rgba(255, 255, 255, 0.75)',
-              background: 'transparent',
-              border: 'none',
-              boxShadow: 'none',
               flexShrink: 0,
               cursor: 'pointer',
               width: 32,
@@ -238,9 +235,6 @@ export function Header() {
           }}
           style={{
             color: '#ffffff',
-            background: 'transparent',
-            border: 'none',
-            boxShadow: 'none',
             flexShrink: 0,
             cursor: 'pointer',
             width: 32,
