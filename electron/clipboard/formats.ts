@@ -44,6 +44,18 @@ const execFileAsync = promisify(execFile)
 export const CF_FILE_LIST = 'FileNameW'
 
 /**
+ * Electron normalizes Finder's native `public.file-url` pasteboard type to
+ * `text/uri-list` on macOS. Keep the native spellings too for compatibility
+ * with other producers and older Electron releases.
+ */
+export function isMacFileListFormat(format: string): boolean {
+  const lower = format.toLowerCase()
+  return lower === 'text/uri-list' ||
+    lower === 'public.file-url' ||
+    lower === 'nsfilenamespboardtype'
+}
+
+/**
  * Async version: reads the full list of copied file paths via PowerShell
  * GetFileDropList(), which is the only reliable way to retrieve ALL selected
  * files from a multi-file Explorer copy (CF_HDROP / FileNameW only carries
@@ -55,8 +67,7 @@ export const CF_FILE_LIST = 'FileNameW'
 async function readFileListAsync(): Promise<string[] | null> {
   try {
     const advertisedFormats = clipboard.availableFormats().map((format) => format.toLowerCase())
-    const hasMacFileUrls = advertisedFormats.includes('public.file-url') ||
-      advertisedFormats.includes('nsfilenamespboardtype')
+    const hasMacFileUrls = advertisedFormats.some(isMacFileListFormat)
     if (process.platform === 'darwin' && hasMacFileUrls) {
       const paths = await readMacClipboardFiles()
       const valid = filterValidPaths(paths ?? [])
@@ -108,7 +119,7 @@ async function readFileListAsync(): Promise<string[] | null> {
 function readFileListFast(): string[] | null {
   try {
     if (process.platform === 'darwin') {
-      for (const format of ['public.file-url', 'NSFilenamesPboardType']) {
+      for (const format of ['text/uri-list', 'public.file-url', 'NSFilenamesPboardType']) {
         const buf = clipboard.readBuffer(format)
         if (!buf || buf.length === 0) continue
         const raw = buf.toString('utf8').replace(/\0/g, '')
@@ -145,10 +156,7 @@ function readFileListFast(): string[] | null {
 export function clipboardHasFileNameW(): boolean {
   try {
     if (process.platform === 'darwin') {
-      return clipboard.availableFormats().some((format) => {
-        const lower = format.toLowerCase()
-        return lower === 'public.file-url' || lower === 'nsfilenamespboardtype'
-      })
+      return clipboard.availableFormats().some(isMacFileListFormat)
     }
     const buf = clipboard.readBuffer(CF_FILE_LIST)
     return !!(buf && buf.length >= 4)
@@ -217,7 +225,7 @@ function clipboardAdvertisesFileList(): boolean {
     return clipboard.availableFormats().some((f) => {
       const l = f.toLowerCase()
       return l === 'filenamew' || l === 'filename' || l.includes('shell idlist') ||
-        l === 'public.file-url' || l === 'nsfilenamespboardtype'
+        isMacFileListFormat(l)
     })
   } catch {
     return false
